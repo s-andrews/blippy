@@ -1,6 +1,9 @@
 from flask import Flask, request, render_template, Response
-import ollama
 
+import random
+import string
+from pathlib import Path
+import re
 
 app = Flask(__name__)
 
@@ -10,27 +13,18 @@ with open("prompt.txt","rt",encoding="utf8") as infh:
     for line in infh:
         prompt_template += line
 
-def ask_blippy(question):
-    client = ollama.Client(verify=False, timeout=300, host="https://capstone.babraham.ac.uk/ollama/BAEBMJGBFMOGTCQAEFQH/")
 
-    prompt=prompt_template+question
+def ask_question(question):
+    # We make a random code and folder in the questions folder
+    blippycode = ''.join(random.choices(string.ascii_uppercase, k=20))
+    question_folder = Path(__file__).parent / "questions" / blippycode
+    question_folder.mkdir()
 
-    stream = client.chat(
-        model="gpt-oss:20b",
-        stream=True,
-        messages=[
-            {
-                "role":"user",
-                "content": prompt
-            }
-        ]
-    )
-    output = ""
+    question_path = question_folder / "question.txt"
+    with open(question_path,"wt",encoding="utf8") as out:
+        print(question,file=out)
 
-    for chunk in stream:
-        output = output + chunk['message']['content']
-
-    return output
+    return("BLIPPYCODE:"+blippycode)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -41,22 +35,49 @@ def index():
 
     elif request.method == "POST":
         # Extract "question" from form data
-        question = request.form.get("question", "")
 
-        answer = ""
+        if ("question") in request.form:
+            # They're asking a question
+            question = request.form.get("question", "")
 
-        if not question.isascii():
-            answer = "Sorry, but unless your question is ASCII you can't ask-y it to Blippy"
+            answer = ""
 
-        elif len(question) > 1000:
-            answer = "Whoa there - it's supposed to be a question, not an essay - how about you give me the TLDR version of that?"
+            if not question.isascii():
+                answer = "Sorry, but unless your question is ASCII you can't ask-y it to Blippy"
 
-        else:
-            # Pass to ask_blippy function
-            answer = ask_blippy(question)
+            elif len(question) > 1000:
+                answer = "Whoa there - it's supposed to be a question, not an essay - how about you give me the TLDR version of that?"
 
-        # Return the result as plain text response
-        return Response(answer, mimetype="text/plain")
+            else:
+                # Pass to ask_blippy function
+                answer = ask_question(question)
+
+            # Return the result as plain text response
+            return Response(answer, mimetype="text/plain")
+        
+        elif "BLIPPYCODE" in request.form:
+            # They're checking to see if the asnwer is ready yet.
+            blippycode = request.form.get("BLIPPYCODE")
+
+            if not re.findall("^[A-Z]{20}$",blippycode):
+                raise Exception("Not a valid blippy code")
+            
+            question_folder = Path(__file__).parent / "questions" / blippycode
+
+            if not question_folder.exists():
+                raise Exception("Not a valid blippy code")
+            
+            if (question_folder / "done").exists():
+                answer = "ANSWER"
+                with open(question_folder / "answer.txt","rt", encoding="utf8") as infh:
+                    for line in infh:
+                        answer += line
+
+                return answer
+            
+            else:
+                return "WAITING"
+
 
 
 if __name__ == "__main__":
