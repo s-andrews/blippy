@@ -7,11 +7,6 @@ import re
 
 app = Flask(__name__)
 
-prompt_template = ""
-
-with open("prompt.txt","rt",encoding="utf8") as infh:
-    for line in infh:
-        prompt_template += line
 
 
 def ask_question(question):
