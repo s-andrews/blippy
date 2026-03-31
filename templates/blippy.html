@@ -12,6 +12,17 @@
             text-align: center;
         }
 
+        #discount {
+            visibility: hidden;
+            font-size: 20px;
+            color: rgb(221, 221, 14);
+            margin-top: 2em;
+        }
+
+        #discount a {
+            color: rgb(221, 221, 14);
+        }
+
         h1 {
             color: rgb(221, 221, 14);
             font-size: 64px;
@@ -85,6 +96,8 @@
             <button onclick="sendQuestion()">Ask Blippy!</button>
 
             <div class="response" id="response"></div>
+
+            <div id="discount">Thanks for asking Blippy! Use discount code "<strong>BLIPPY</strong>" for the rest of the day on <a href="https://biotrain.tv">BioTrain.TV</a><br><br>It will give you a 20% discount on all of our current courses.</div>
         </div>
     </div>
 
@@ -109,6 +122,7 @@
                 if (text.startsWith("ANSWER")) {
                     const cleaned = text.slice("ANSWER".length);
                     document.getElementById("response").textContent = cleaned;
+                    document.getElementById("discount").style.visibility = "visible";
                     return;
                 }
 
