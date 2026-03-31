@@ -62,7 +62,7 @@ class NewDirHandler(FileSystemEventHandler):
 
 
 def ask_blippy(question):
-    client = ollama.Client(verify=False, timeout=300, host="https://capstone.babraham.ac.uk/ollama/BAEBMJGBFMOGTCQAEFQH/")
+    client = ollama.Client(verify=False, timeout=300, host="https://localhost:8443/ollama/BAEBMJGBFMOGTCQAEFQH/")
 
     prompt=prompt_template+question
 
